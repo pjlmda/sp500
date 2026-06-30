@@ -1,0 +1,18 @@
+{
+  "classifier": {
+    "colsample_bytree": 0.8307689432639139,
+    "gamma": 0.02982025747190833,
+    "learning_rate": 0.14816417112407243,
+    "max_depth": 6,
+    "min_child_weight": 5,
+    "subsample": 0.7096147044602518
+  },
+  "regressor": {
+    "colsample_bytree": 0.5519327409932608,
+    "gamma": 0.3261845713819337,
+    "learning_rate": 0.1089600281386664,
+    "max_depth": 5,
+    "min_child_weight": 7,
+    "subsample": 0.8813811040057837
+  }
+}
