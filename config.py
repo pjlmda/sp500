@@ -1,0 +1,14 @@
+TICKER = "^GSPC"
+START_DATE = "2010-01-01"
+
+FEATURE_LAGS = [1, 2, 3, 5, 10]
+MA_WINDOWS = [5, 10, 20, 50]
+RSI_WINDOW = 14
+VOLATILITY_WINDOWS = [5, 20]
+VOLUME_WINDOWS = [5, 20]
+
+TRAIN_RATIO = 0.8
+
+MODELS_DIR = "models"
+DATA_DIR = "data"
+DATA_CACHE = "data/sp500_raw.parquet"
