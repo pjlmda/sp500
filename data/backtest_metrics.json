@@ -1,0 +1,16 @@
+{
+  "direction_accuracy": 0.5149,
+  "direction_accuracy_traded": 0.5504,
+  "pct_days_traded": 0.6083,
+  "confidence_threshold": 0.0,
+  "strategy_total_return_pct": 177.32,
+  "bnh_total_return_pct": 430.54,
+  "strategy_sharpe": 0.607,
+  "bnh_sharpe": 0.816,
+  "strategy_max_drawdown_pct": -27.25,
+  "bnh_max_drawdown_pct": -33.92,
+  "n_test_days": 3393,
+  "test_start": "2012-12-28",
+  "test_end": "2026-06-26",
+  "long_only": true
+}

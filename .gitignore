@@ -1,5 +1,11 @@
-# Downloaded data — regenerated at runtime via yfinance
-data/
+# Raw downloaded data — regenerated at runtime via yfinance
+data/sp500_combined.parquet
+data/sp500_raw.parquet
+data/vix_raw.parquet
+data/backtest_raw_predictions.parquet
+# data/backtest_results.parquet  → tracked (needed by Streamlit app)
+# data/backtest_metrics.json     → tracked (needed by Streamlit app)
+# data/predictions_history.json  → tracked (written by GitHub Actions daily)
 
 # Model artifacts are committed so Streamlit Cloud can load them without retraining
 # To exclude them again: uncomment the line below

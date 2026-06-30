@@ -59,6 +59,18 @@ def load_backtest():
 
 
 @st.cache_data
+def load_history():
+    path = os.path.join(config.DATA_DIR, "predictions_history.json")
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        records = json.load(f)
+    df = pd.DataFrame(records)
+    df["as_of_date"] = pd.to_datetime(df["as_of_date"])
+    return df.sort_values("as_of_date", ascending=False).reset_index(drop=True)
+
+
+@st.cache_data
 def load_importances():
     reg = joblib.load(os.path.join(config.MODELS_DIR, "regressor.joblib"))
     clf = joblib.load(os.path.join(config.MODELS_DIR, "classifier.joblib"))
@@ -267,13 +279,63 @@ def page_model():
         )
 
 
+def page_history():
+    df = load_history()
+
+    st.markdown("## Prediction History")
+
+    if df is None or df.empty:
+        st.info("No prediction history yet. The GitHub Actions workflow runs daily after market close and will populate this page automatically.")
+        return
+
+    st.caption(f"{len(df)} predictions recorded  —  updated daily by GitHub Actions after US market close")
+
+    # Accuracy summary if we have enough rows
+    if len(df) >= 2:
+        df_eval = df.copy().sort_values("as_of_date")
+        # Shift last_close to get actual next-day close (approximation: use next row's last_close)
+        df_eval["actual_next_close"] = df_eval["last_close"].shift(-1)
+        df_eval["actual_direction"] = (df_eval["actual_next_close"] > df_eval["last_close"]).map({True: "Up", False: "Down"})
+        df_eval = df_eval.dropna(subset=["actual_direction"])
+        correct = (df_eval["predicted_direction"] == df_eval["actual_direction"]).mean()
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Predictions logged", len(df))
+        c2.metric("Resolved predictions", len(df_eval))
+        c3.metric("Realised accuracy", f"{correct:.1%}")
+        st.markdown("<br>", unsafe_allow_html=True)
+
+    # Direction accuracy chart
+    if len(df) >= 5:
+        df_plot = df.sort_values("as_of_date")
+        colors = [COLORS["up"] if d == "Up" else COLORS["down"] for d in df_plot["predicted_direction"]]
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=df_plot["as_of_date"], y=df_plot["predicted_return_pct"],
+            marker_color=colors, name="Predicted daily return (%)",
+        ))
+        _apply_layout(fig, "Predicted Daily Return (%)", height=300)
+        fig.update_yaxes(ticksuffix="%")
+        st.plotly_chart(fig, use_container_width=True)
+
+    # History table
+    display_cols = ["as_of_date", "last_close", "predicted_price",
+                    "predicted_return_pct", "predicted_direction", "direction_confidence_pct"]
+    display_df = df[display_cols].rename(columns={
+        "as_of_date": "Date", "last_close": "Last Close",
+        "predicted_price": "Predicted Price", "predicted_return_pct": "Return (%)",
+        "predicted_direction": "Direction", "direction_confidence_pct": "Confidence (%)",
+    })
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+
 # ── Sidebar + routing ─────────────────────────────────────────────────────────
 
 with st.sidebar:
     st.markdown("## 📈 S&P 500 Predictor")
     st.markdown("XGBoost model trained on technical indicators + VIX")
     st.markdown("---")
-    page = st.radio("", ["Prediction", "Backtest", "Model"], label_visibility="collapsed")
+    page = st.radio("", ["Prediction", "Backtest", "History", "Model"], label_visibility="collapsed")
     st.markdown("---")
     if st.button("Refresh data & prediction"):
         st.cache_data.clear()
@@ -283,5 +345,7 @@ if page == "Prediction":
     page_prediction()
 elif page == "Backtest":
     page_backtest()
+elif page == "History":
+    page_history()
 else:
     page_model()
