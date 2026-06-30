@@ -62,9 +62,17 @@ def load(force_refresh: bool = False) -> pd.DataFrame:
     macro = _fetch_macro(config.START_DATE)
 
     df = sp.join(vix, how="left").join(macro, how="left")
-    # Forward-fill macro series for non-trading days / delayed updates
+
+    # Guarantee every expected macro column exists — fill with NaN if ticker failed
     macro_cols = ["vix"] + list(MACRO_TICKERS.keys())
-    df[macro_cols] = df[macro_cols].ffill()
+    for col in macro_cols:
+        if col not in df.columns:
+            print(f"  Warning: {col} missing from data, filling with NaN")
+            df[col] = float("nan")
+
+    # Forward-fill for non-trading day gaps, backward-fill for any leading NaN,
+    # then zero-fill as a last resort so feature engineering never sees NaN
+    df[macro_cols] = df[macro_cols].ffill().bfill().fillna(0)
     df = df.dropna(subset=["open", "close"])
 
     df.to_parquet(cache)

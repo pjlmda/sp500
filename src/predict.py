@@ -34,6 +34,12 @@ def predict_next_day(force_refresh: bool = False) -> dict:
     feat, _ = build(df)
     reg, clf, scaler, feature_cols = _load_artifacts()
 
+    if feat.empty:
+        raise RuntimeError(
+            "Feature DataFrame is empty after build() — one or more data series "
+            "likely failed to download. Check yfinance connectivity."
+        )
+
     # Last row has valid features but NaN targets — that's our inference point
     last = feat[feature_cols].iloc[[-1]].values
     last_sc = scaler.transform(last)

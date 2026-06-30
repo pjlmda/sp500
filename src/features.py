@@ -132,6 +132,12 @@ def build(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
 
     feature_cols = f.columns.tolist()
 
+    # Forward-fill then zero-fill so a failed macro ticker can't empty the DataFrame.
+    # Rows with insufficient price history (e.g. first 252 rows for annual momentum)
+    # still get dropped by the dropna below — we only fill NaN that would otherwise
+    # persist in ALL rows (i.e. a genuinely missing cross-asset series).
+    f[feature_cols] = f[feature_cols].ffill().fillna(0)
+
     # Targets: shifted -1, so the last row has NaN targets (future unknown)
     f["target_return"] = daily_return.shift(-1)
     f["target_direction"] = (f["target_return"] > 0).astype(float)
